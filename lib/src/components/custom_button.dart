@@ -30,21 +30,27 @@ class CustomButton extends StatelessWidget {
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
               ),
-          child: Text(text, style: const TextStyle(color: Colors.white)),
+          child: Text(text,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: "Poppins",
+                  fontWeight: FontWeight.w600)),
         );
       case ButtonType.outline:
         return OutlinedButton(
-          onPressed: onPressedFunction,
-          style: style ??
-              OutlinedButton.styleFrom(
-                side: const BorderSide(color: custom_colors.Colors.primary),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+            onPressed: onPressedFunction,
+            style: style ??
+                OutlinedButton.styleFrom(
+                  side: const BorderSide(color: custom_colors.Colors.primary),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
                 ),
-              ),
-          child: Text(text,
-              style: const TextStyle(color: custom_colors.Colors.primary)),
-        );
+            child: Text(text,
+                style: const TextStyle(
+                    color: custom_colors.Colors.primary,
+                    fontFamily: "Poppins",
+                    fontWeight: FontWeight.w600)));
     }
   }
 }

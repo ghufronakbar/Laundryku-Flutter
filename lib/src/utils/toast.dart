@@ -8,6 +8,7 @@ class Toast {
         gravity: ToastGravity.TOP,
         backgroundColor: Colors.primary,
         textColor: Colors.white,
+        fontAsset: "assets/fonts/Poppins-Regular.ttf",
         fontSize: 16.0);
   }
 
@@ -17,6 +18,7 @@ class Toast {
         gravity: ToastGravity.TOP,
         backgroundColor: Colors.err,
         textColor: Colors.white,
+        fontAsset: "assets/fonts/Poppins-Regular.ttf",
         fontSize: 16.0);
   }
 }

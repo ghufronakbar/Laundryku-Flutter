@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:laundryku/src/screens/main_screen.dart';
+import 'package:laundryku/src/screens/home/main_screen.dart';
 import 'package:laundryku/src/screens/welcome_screen.dart';
 import 'package:laundryku/src/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';

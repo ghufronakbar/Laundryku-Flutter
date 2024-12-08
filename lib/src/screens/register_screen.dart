@@ -1,26 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
+import 'package:laundryku/src/screens/login_screen.dart';
 import 'package:laundryku/src/screens/home/main_screen.dart';
-import 'package:laundryku/src/screens/register_screen.dart';
+import 'package:laundryku/src/utils/regex.dart';
 import 'package:laundryku/src/utils/toast.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  TextEditingController nameController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController confirmatPasswordController = TextEditingController();
 
-  Future<void> handleLogin() async {
+  Future<void> handleRegister() async {
+    String name = nameController.text;
+    String phone = phoneController.text;
     String email = emailController.text;
     String password = passwordController.text;
-    if (email.isEmpty || password.isEmpty) {
+    String confirmPassword = confirmatPasswordController.text;
+
+    if (name.isEmpty ||
+        phone.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       Toast().err(message: "Semua field harus diisi");
+      return;
+    }
+
+    if (!Regex().validateEmail(email)) {
+      Toast().err(message: "Email tidak valid");
+      return;
+    }
+
+    if (!Regex().validatePassword(password)) {
+      Toast().err(message: "Password tidak valid");
+      return;
+    }
+
+    if (password != confirmPassword) {
+      Toast().err(message: "Konfirmasi password tidak sama");
       return;
     }
 
@@ -30,9 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void goToRegister() {
+  void goToLogin() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -44,7 +71,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
-            // Menggunakan min-height yang setara dengan tinggi layar
             constraints: BoxConstraints(minHeight: screenHeight),
             child: Center(
               child: Padding(
@@ -60,10 +86,45 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const CustomText(
-                        text: "Login", style: CustomTextStyle.title),
+                        text: "Register", style: CustomTextStyle.title),
                     const CustomText(
-                        text: "Masuk untuk melanjutkan",
+                        text: "Daftar untuk melanjutkan",
                         style: CustomTextStyle.subtitle),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: 50,
+                      child: TextFormField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Nama',
+                          hintText: 'Masukkan nama',
+                          labelStyle: CustomTextStyle.content.style,
+                          hintStyle: CustomTextStyle.subtitle.style,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          prefixIcon: const Icon(Icons.person),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: 50,
+                      child: TextFormField(
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          labelText: 'Nomor Telepon',
+                          hintText: 'Masukkan nomor telepon',
+                          labelStyle: CustomTextStyle.content.style,
+                          hintStyle: CustomTextStyle.subtitle.style,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          prefixIcon: const Icon(Icons.phone),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 20),
                     SizedBox(
                       height: 50,
@@ -101,11 +162,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
+                        height: 50,
+                        child: TextFormField(
+                          controller: confirmatPasswordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: 'Konfirmasi password',
+                            hintText: 'Masukkan konfirmasi password',
+                            labelStyle: CustomTextStyle.content.style,
+                            hintStyle: CustomTextStyle.subtitle.style,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            prefixIcon: const Icon(Icons.lock),
+                          ),
+                        )),
+                    const SizedBox(height: 20),
+                    SizedBox(
                       width: screenWidth,
                       child: CustomButton(
-                        text: "Login",
+                        text: "Register",
                         buttonType: ButtonType.fill,
-                        onPressed: handleLogin,
+                        onPressed: handleRegister,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -113,14 +191,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const CustomText(
-                          text: "Belum punya akun?",
+                          text: "Sudah punya akun?",
                           style: CustomTextStyle.content,
                         ),
                         const SizedBox(width: 5),
                         GestureDetector(
-                          onTap: goToRegister,
+                          onTap: goToLogin,
                           child: const CustomText(
-                              text: "Daftar", style: CustomTextStyle.highlight),
+                              text: "Login", style: CustomTextStyle.highlight),
                         ),
                       ],
                     )
