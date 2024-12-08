@@ -39,21 +39,8 @@ class _AccountScreenState extends State<AccountScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 80),
-              ClipOval(
-                child: CachedNetworkImage(
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.cover,
-                  imageUrl:
-                      "https://gratisography.com/wp-content/uploads/2024/10/gratisography-cool-cat-800x525.jpg",
-                  progressIndicatorBuilder: (context, url, downloadProgress) =>
-                      Image.asset(
-                    'assets/images/profile.jpg',
-                  ),
-                  errorWidget: (context, url, error) => Image.asset(
-                    'assets/images/profile.jpg',
-                  ),
-                ),
+              const ClipOval(
+                child: ProfileImage(imageUrl: null),
               ),
               const SizedBox(height: 40),
               SizedBox(
@@ -90,7 +77,7 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
               SizedBox(
                 height: 50,
                 child: TextFormField(
@@ -119,6 +106,28 @@ class _AccountScreenState extends State<AccountScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class ProfileImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const ProfileImage({super.key, this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return CachedNetworkImage(
+      width: 120,
+      height: 120,
+      fit: BoxFit.cover,
+      imageUrl: imageUrl ?? "",
+      progressIndicatorBuilder: (context, url, downloadProgress) => Image.asset(
+        'assets/images/profile.jpg',
+      ),
+      errorWidget: (context, url, error) => Image.asset(
+        'assets/images/profile.jpg',
       ),
     );
   }
