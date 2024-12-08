@@ -16,8 +16,10 @@ class _HomeScreenState extends State<HomeScreen> {
     var hour = DateTime.now().hour;
     if (hour < 12) {
       return 'Selamat Pagi, $_name';
-    } else if (hour < 18) {
+    } else if (hour < 15) {
       return 'Selamat Siang, $_name';
+    } else if (hour < 18) {
+      return 'Selamat Sore, $_name';
     } else {
       return 'Selamat Malam, $_name';
     }

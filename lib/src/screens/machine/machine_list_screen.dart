@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:laundryku/src/components/custom_text.dart';
+import 'package:laundryku/src/screens/machine/machine_reservation_screen.dart';
 
-class MachineListScreen extends StatelessWidget {
+class MachineListScreen extends StatefulWidget {
   final String machineName;
 
   const MachineListScreen({
@@ -12,10 +13,26 @@ class MachineListScreen extends StatelessWidget {
   });
 
   @override
+  MachineListScreenState createState() => MachineListScreenState();
+}
+
+class MachineListScreenState extends State<MachineListScreen> {
+  // Fungsi untuk navigasi ke halaman reservasi
+  void onGoReservation() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => MachineReservationScreen(
+          machineName: 'Reservasi ${widget.machineName}',
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(machineName),
+        title: Text(widget.machineName),
         titleTextStyle: const TextStyle(
           color: Colors.black,
           fontSize: 18,
@@ -39,11 +56,11 @@ class MachineListScreen extends StatelessWidget {
                     children: List.generate(11, (index) {
                       return StaggeredGridTile.count(
                         crossAxisCellCount: 1,
-                        mainAxisCellCount: 1.2,
+                        mainAxisCellCount: 1.15,
                         child: CardMachine(
                           isAvailable: true,
-                          name: "Machine $index",
-                          type: machineName == "Mesin Pencuci"
+                          name: "Machine ${index + 1}",
+                          type: widget.machineName == "Mesin Pencuci"
                               ? MachineType.washing
                               : MachineType.drying,
                         ),
@@ -56,19 +73,18 @@ class MachineListScreen extends StatelessWidget {
             ),
           ),
 
-          // Tombol floating di bagian bawah
-          Positioned(
-            bottom: 16, // Jarak dari bawah layar
-            left: 16, // Jarak dari sisi kiri layar
-            right: 16, // Jarak dari sisi kanan layar
-            child: SizedBox(
-              width: double.infinity,
-              child: CustomButton(
-                text: "Reservasi Sekarang",
-                buttonType: ButtonType.fill,
-                onPressed: () {},
-              ),
-            ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: CustomButton(
+                    text: "Reservasi Sekarang",
+                    buttonType: ButtonType.fill,
+                    onPressed: onGoReservation,
+                  ),
+                )),
           ),
         ],
       ),
@@ -116,9 +132,8 @@ class CardMachine extends StatelessWidget {
             const SizedBox(height: 8),
             CustomText(
               text: name,
-              style: CustomTextStyle.subheading,
+              style: CustomTextStyle.subheading2,
             ),
-            const SizedBox(height: 8),
             CustomText(
               text: isAvailable ? 'Tersedia' : 'Tidak Tersedia',
               style: isAvailable

@@ -22,6 +22,7 @@ enum CustomTextStyle {
   title,
   heading,
   subheading,
+  subheading2,
   subtitle,
   content,
   highlight,
@@ -46,6 +47,12 @@ extension CustomTextStyleExtension on CustomTextStyle {
       case CustomTextStyle.subheading:
         return const TextStyle(
           fontSize: 20,
+          fontWeight: FontWeight.bold,
+          fontFamily: "Poppins",
+        );
+      case CustomTextStyle.subheading2:
+        return const TextStyle(
+          fontSize: 16,
           fontWeight: FontWeight.bold,
           fontFamily: "Poppins",
         );

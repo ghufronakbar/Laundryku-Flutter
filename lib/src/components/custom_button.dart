@@ -51,8 +51,23 @@ class CustomButton extends StatelessWidget {
                     color: custom_colors.Colors.primary,
                     fontFamily: "Poppins",
                     fontWeight: FontWeight.w600)));
+      case ButtonType.disabled:
+        return OutlinedButton(
+            onPressed: onPressedFunction,
+            style: style ??
+                OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.grey),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10)),
+                  ),
+                ),
+            child: Text(text,
+                style: const TextStyle(
+                    color: Colors.grey,
+                    fontFamily: "Poppins",
+                    fontWeight: FontWeight.w600)));
     }
   }
 }
 
-enum ButtonType { fill, outline }
+enum ButtonType { fill, outline, disabled }
