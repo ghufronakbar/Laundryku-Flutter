@@ -125,7 +125,12 @@ class DetailHistoryScreenState extends State<DetailHistoryScreen> {
                               text: "Tanggal Reservasi:",
                               style: CustomTextStyle.content),
                           CustomText(
-                              text: Helpers.getNamedDate(DateTime.now()),
+                              text: "Mulai :" +
+                                  Helpers.getNamedDate(DateTime.now()),
+                              style: CustomTextStyle.content),
+                          CustomText(
+                              text: "Selesai :" +
+                                  Helpers.getNamedDate(DateTime.now()),
                               style: CustomTextStyle.content),
                           const SizedBox(height: 8),
                           const CustomText(
@@ -157,7 +162,7 @@ class DetailHistoryScreenState extends State<DetailHistoryScreen> {
                           const CustomText(
                               text: "Metode Pembayaran: -",
                               style: CustomTextStyle.content),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           CustomText(
                               text: "Dibayar pada: " +
                                   Helpers.getNamedDate(DateTime.now()),

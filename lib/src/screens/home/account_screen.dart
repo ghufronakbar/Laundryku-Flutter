@@ -98,6 +98,15 @@ class _AccountScreenState extends State<AccountScreen> {
                   onPressed: () {},
                 ),
               ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: screenWidth,
+                child: CustomButton(
+                  text: "Logout",
+                  buttonType: ButtonType.outline,
+                  onPressed: () {},
+                ),
+              ),
             ],
           ),
         ),
