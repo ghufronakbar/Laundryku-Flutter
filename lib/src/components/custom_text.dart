@@ -6,7 +6,8 @@ class CustomText extends StatelessWidget {
   final CustomTextStyle style;
   final int? maxLines;
 
-  const CustomText({super.key, required this.text, required this.style, this.maxLines});
+  const CustomText(
+      {super.key, required this.text, required this.style, this.maxLines});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +38,7 @@ extension CustomTextStyleExtension on CustomTextStyle {
         return const TextStyle(
           fontSize: 28,
           fontWeight: FontWeight.bold,
-          fontFamily: "Poppins",          
+          fontFamily: "Poppins",
         );
       case CustomTextStyle.heading:
         return const TextStyle(
@@ -85,10 +86,10 @@ extension CustomTextStyleExtension on CustomTextStyle {
         );
       case CustomTextStyle.light:
         return const TextStyle(
-          fontSize: 16,          
-          fontWeight: FontWeight.w300,
-          fontFamily: "Poppins",
-        );
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            fontFamily: "Poppins",
+            color: Colors.grey);
     }
   }
 }
