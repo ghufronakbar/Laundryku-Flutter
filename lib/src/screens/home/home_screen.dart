@@ -40,19 +40,15 @@ class _HomeScreenState extends State<HomeScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      appBar: AppBar(
+        title: CustomText(text: getGreeting(), style: CustomTextStyle.title),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 40),
-              CustomText(
-                text: getGreeting(),
-                style: CustomTextStyle.title,
-                maxLines: 2,
-              ),
-              const SizedBox(height: 20),
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Center(

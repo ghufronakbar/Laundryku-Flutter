@@ -11,19 +11,6 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  final String _name = "Rena";
-
-  String getGreeting() {
-    var hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Selamat Pagi, $_name';
-    } else if (hour < 18) {
-      return 'Selamat Siang, $_name';
-    } else {
-      return 'Selamat Malam, $_name';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -32,13 +19,21 @@ class _AccountScreenState extends State<AccountScreen> {
     TextEditingController emailController = TextEditingController();
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(16.0),
+            child: CustomText(
+                text: "Pengaturan Profil", style: CustomTextStyle.title),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 80),
+            children: [              
               const ClipOval(
                 child: ProfileImage(imageUrl: null),
               ),

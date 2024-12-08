@@ -27,6 +27,7 @@ enum CustomTextStyle {
   content,
   highlight,
   light,
+  tab
 }
 
 extension CustomTextStyleExtension on CustomTextStyle {
@@ -67,6 +68,12 @@ extension CustomTextStyleExtension on CustomTextStyle {
         return const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w400,
+          fontFamily: "Poppins",
+        );
+      case CustomTextStyle.tab:
+        return const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
           fontFamily: "Poppins",
         );
       case CustomTextStyle.highlight:
