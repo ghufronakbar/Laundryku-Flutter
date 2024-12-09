@@ -4,7 +4,7 @@ class Regex {
 
   static const String password = r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$';
 
-  bool validateEmail(String email) => !RegExp(email).hasMatch(email);
+  bool validateEmail(String email) => RegExp(email).hasMatch(email);
 
-  bool validatePassword(String password) => !RegExp(password).hasMatch(password);
+  bool validatePassword(String password) => RegExp(password).hasMatch(password);
 }

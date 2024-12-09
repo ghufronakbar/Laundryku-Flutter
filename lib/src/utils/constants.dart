@@ -1,4 +1,4 @@
 class Constants {
-  static const String baseUrl = 'https://127.0.0.1:8000';
+  static const String baseUrl = 'http://192.168.181.34:8000/api';
   static const String accessToken = 'ACCESS_TOKEN';  
 }

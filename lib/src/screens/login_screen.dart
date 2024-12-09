@@ -3,6 +3,7 @@ import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/screens/home/main_screen.dart';
 import 'package:laundryku/src/screens/register_screen.dart';
+import 'package:laundryku/src/services/auth_services.dart';
 import 'package:laundryku/src/utils/toast.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,16 +16,22 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  bool _loading = false;
+
+  void setLoading(bool loading) {
+    setState(() {
+      _loading = loading;
+    });
+  }
 
   Future<void> handleLogin() async {
     String email = emailController.text;
     String password = passwordController.text;
-    if (email.isEmpty || password.isEmpty) {
-      Toast().err(message: "Semua field harus diisi");
-      return;
-    }
 
-    Toast().success(message: email + password);
+    await AuthServices().login(email, password, _loading, setLoading, goToMain);
+  }
+
+  void goToMain() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const MainScreen()),
     );

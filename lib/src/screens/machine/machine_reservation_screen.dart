@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/utils/colors.dart' as custom_colors;
+import 'package:skeletonizer/skeletonizer.dart';
 
 class MachineReservationScreen extends StatefulWidget {
   final String machineName;
@@ -18,16 +19,44 @@ class MachineReservationScreen extends StatefulWidget {
 }
 
 class MachineReservationScreenState extends State<MachineReservationScreen> {
-  // Variabel untuk menyimpan tanggal yang dipilih
   DateTime? selectedDate;
+  String? selectedMachineNumber = '1';
+  bool _loading = true;
 
-  // Variabel untuk menyimpan pilihan dropdown
-  String? selectedMachineNumber = '1'; // Default mesin nomor 1
+  // Dummy data for ButtonTime
+  List<Map<String, dynamic>> dummyTimes = List.generate(
+    24,
+    (index) => {
+      'text': DateFormat('HH:mm')
+          .format(DateTime(2023, 1, 1, index, 0)), // Time from 00:00 to 23:00
+      'isAvailable': index % 2 == 0, // Mark even hours as available
+    },
+  );
+
+  void onReservationPressed() {
+    setState(() {
+      _loading = !_loading;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final String machineType =
         widget.machineName == "Reservasi Mesin Pencuci" ? "MACHINE" : "DRYING";
+
+    List<Widget> buttonsTimeWithLoading = List.generate(
+      24,
+      (index) {
+        return Skeletonizer(
+          enabled: _loading,
+          child: ButtonTime(
+            text: dummyTimes[index]['text'],
+            isSelected: false, // Set this according to your logic later
+            isAvailable: true,
+          ),
+        );
+      },
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -126,14 +155,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: List.generate(
-                        24,
-                        (index) => const ButtonTime(
-                          text: "22:30",
-                          isSelected: true,
-                          isAvailable: true,
-                        ),
-                      ),
+                      children: buttonsTimeWithLoading,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -144,14 +166,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: List.generate(
-                        24,
-                        (index) => const ButtonTime(
-                          text: "22:00",
-                          isSelected: false,
-                          isAvailable: true,
-                        ),
-                      ),
+                      children: buttonsTimeWithLoading,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -162,14 +177,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: List.generate(
-                        24,
-                        (index) => const ButtonTime(
-                          text: "22:00",
-                          isSelected: false,
-                          isAvailable: false,
-                        ),
-                      ),
+                      children: buttonsTimeWithLoading,
                     ),
                   ),
                   const SizedBox(
@@ -243,7 +251,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                                 style: CustomTextStyle.content,
                               ),
                             ],
-                          ),                          
+                          ),
                         ],
                       ),
                     ),
@@ -263,9 +271,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   child: CustomButton(
                     text: "Reservasi Sekarang",
                     buttonType: ButtonType.fill,
-                    onPressed: () {
-                      // Logic untuk tombol reservasi
-                    },
+                    onPressed: onReservationPressed,
                   ),
                 )),
           ),
@@ -281,12 +287,13 @@ class ButtonTime extends StatelessWidget {
   final bool isSelected;
   final bool isAvailable;
 
-  const ButtonTime(
-      {super.key,
-      required this.text,
-      this.onPressed,
-      this.isSelected = false,
-      this.isAvailable = false});
+  const ButtonTime({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.isSelected = false,
+    this.isAvailable = false,
+  });
 
   @override
   Widget build(BuildContext context) {

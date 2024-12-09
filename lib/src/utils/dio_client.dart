@@ -1,9 +1,8 @@
-import "package:dio/dio.dart";
-import "package:laundryku/src/utils/constants.dart";
-import "package:laundryku/src/utils/toast.dart";
-import "package:shared_preferences/shared_preferences.dart";
+import 'package:dio/dio.dart';
+import 'package:laundryku/src/utils/constants.dart';
+import 'package:laundryku/src/utils/toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// Fungsi untuk mengambil token dari SharedPreferences
 Future<String?> getToken() async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getString(Constants.accessToken);
@@ -21,12 +20,11 @@ class DioClient {
         }
         return handler.next(options);
       },
-      onResponse: (response, handler) {
+      onResponse: (response, handler) async {
         return handler.next(response);
       },
-      onError: (DioException error, handler) {
-        Toast().err(message: error.message ?? "Terjadi kesalahan");
-        return handler.next(error);
+      onError: (DioException e, handler) async {        
+        return handler.next(e);
       },
     ));
   }

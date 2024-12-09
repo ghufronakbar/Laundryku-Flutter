@@ -44,6 +44,7 @@ dependencies:
   fluttertoast: ^8.0.9
   intl: ^0.18.0  
   qr_flutter: ^4.1.0
+  skeletonizer: ^1.4.2
 
 
 dev_dependencies:

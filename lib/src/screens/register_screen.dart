@@ -3,6 +3,7 @@ import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/screens/login_screen.dart';
 import 'package:laundryku/src/screens/home/main_screen.dart';
+import 'package:laundryku/src/services/auth_services.dart';
 import 'package:laundryku/src/utils/regex.dart';
 import 'package:laundryku/src/utils/toast.dart';
 
@@ -19,6 +20,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController confirmatPasswordController = TextEditingController();
+  bool _loading = false;
+
+  void setLoading(bool loading) {
+    setState(() {
+      _loading = loading;
+    });
+  }
 
   Future<void> handleRegister() async {
     String name = nameController.text;
@@ -27,31 +35,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String password = passwordController.text;
     String confirmPassword = confirmatPasswordController.text;
 
-    if (name.isEmpty ||
-        phone.isEmpty ||
-        email.isEmpty ||
-        password.isEmpty ||
-        confirmPassword.isEmpty) {
-      Toast().err(message: "Semua field harus diisi");
-      return;
-    }
+    await AuthServices().register(name, phone, email, password, confirmPassword,
+        _loading, setLoading, goToMain);
+  }
 
-    if (!Regex().validateEmail(email)) {
-      Toast().err(message: "Email tidak valid");
-      return;
-    }
-
-    if (!Regex().validatePassword(password)) {
-      Toast().err(message: "Password tidak valid");
-      return;
-    }
-
-    if (password != confirmPassword) {
-      Toast().err(message: "Konfirmasi password tidak sama");
-      return;
-    }
-
-    Toast().success(message: email + password);
+  void goToMain() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const MainScreen()),
     );

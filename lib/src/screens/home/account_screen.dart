@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:laundryku/src/screens/login_screen.dart';
+import 'package:laundryku/src/services/auth_services.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -18,6 +20,44 @@ class _AccountScreenState extends State<AccountScreen> {
     TextEditingController phoneController = TextEditingController();
     TextEditingController emailController = TextEditingController();
 
+    void handleSave() {
+      // Implement update profile logic here
+    }
+
+    void goToLogin() {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
+
+    void showLogoutConfirmation() {
+      showDialog(
+        context: context,
+        barrierDismissible: false, // Prevent closing dialog by tapping outside
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Konfirmasi Logout'),
+            content: const Text('Apakah Anda yakin ingin keluar?'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  AuthServices().logout(goToLogin);
+                },
+                child: const Text('Ya'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Center(
@@ -33,7 +73,7 @@ class _AccountScreenState extends State<AccountScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [              
+            children: [
               const ClipOval(
                 child: ProfileImage(imageUrl: null),
               ),
@@ -95,7 +135,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 child: CustomButton(
                   text: "Simpan Profil",
                   buttonType: ButtonType.fill,
-                  onPressed: () {},
+                  onPressed: handleSave,
                 ),
               ),
               const SizedBox(height: 4),
@@ -104,7 +144,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 child: CustomButton(
                   text: "Logout",
                   buttonType: ButtonType.outline,
-                  onPressed: () {},
+                  onPressed: showLogoutConfirmation, // Show logout dialog
                 ),
               ),
             ],
