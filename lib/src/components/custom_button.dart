@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:laundryku/src/utils/colors.dart' as custom_colors;
 
@@ -8,12 +9,14 @@ class CustomButton extends StatelessWidget {
     this.onPressed,
     this.buttonType = ButtonType.fill,
     this.style,
+    this.loading = false,
   });
 
   final String text;
   final VoidCallback? onPressed;
   final ButtonType buttonType;
   final ButtonStyle? style;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -30,11 +33,15 @@ class CustomButton extends StatelessWidget {
                   borderRadius: BorderRadius.all(Radius.circular(10)),
                 ),
               ),
-          child: Text(text,
-              style: const TextStyle(
+          child: loading
+              ? const CupertinoActivityIndicator(
                   color: Colors.white,
-                  fontFamily: "Poppins",
-                  fontWeight: FontWeight.w600)),
+                )
+              : Text(text,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontFamily: "Poppins",
+                      fontWeight: FontWeight.w600)),
         );
       case ButtonType.outline:
         return OutlinedButton(
@@ -46,11 +53,15 @@ class CustomButton extends StatelessWidget {
                     borderRadius: BorderRadius.all(Radius.circular(10)),
                   ),
                 ),
-            child: Text(text,
-                style: const TextStyle(
+            child: loading
+                ? const CupertinoActivityIndicator(
                     color: custom_colors.Colors.primary,
-                    fontFamily: "Poppins",
-                    fontWeight: FontWeight.w600)));
+                  )
+                : Text(text,
+                    style: const TextStyle(
+                        color: custom_colors.Colors.primary,
+                        fontFamily: "Poppins",
+                        fontWeight: FontWeight.w600)));
       case ButtonType.disabled:
         return OutlinedButton(
             onPressed: onPressedFunction,

@@ -6,11 +6,11 @@ import 'package:laundryku/src/utils/helpers.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class DetailHistoryScreen extends StatefulWidget {
-  final String reservationName;
+  final String id;
 
   const DetailHistoryScreen({
     super.key,
-    required this.reservationName,
+    required this.id,
   });
 
   @override
@@ -54,7 +54,7 @@ class DetailHistoryScreenState extends State<DetailHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.reservationName),
+        title: Text(widget.id),
         titleTextStyle: const TextStyle(
           color: Colors.black,
           fontSize: 18,

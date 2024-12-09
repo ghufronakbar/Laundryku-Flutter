@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_text.dart';
+import 'package:laundryku/src/models/user.dart';
 import 'package:laundryku/src/screens/machine/machine_list_screen.dart';
+import 'package:laundryku/src/services/account_services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,18 +12,30 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final String _name = "Rena";
+  String _name = "Loading...";
+  late Future<User> _userProfileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userProfileFuture = AccountServices().getProfle();
+    _userProfileFuture.then((user) {
+      setState(() {
+        _name = user.name;
+      });
+    });
+  }
 
   String getGreeting() {
     var hour = DateTime.now().hour;
     if (hour < 12) {
-      return 'Selamat Pagi, $_name';
+      return 'Selamat Pagi,';
     } else if (hour < 15) {
-      return 'Selamat Siang, $_name';
+      return 'Selamat Siang,';
     } else if (hour < 18) {
-      return 'Selamat Sore, $_name';
+      return 'Selamat Sore,';
     } else {
-      return 'Selamat Malam, $_name';
+      return 'Selamat Malam,';
     }
   }
 
@@ -40,15 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      appBar: AppBar(
-        title: CustomText(text: getGreeting(), style: CustomTextStyle.title),
-      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 30),
+              CustomText(text: getGreeting(), style: CustomTextStyle.heading),
+              CustomText(text: _name, style: CustomTextStyle.heading),
+              const SizedBox(height: 10),
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Center(

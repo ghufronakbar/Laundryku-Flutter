@@ -12,6 +12,16 @@ class Toast {
         fontSize: 16.0);
   }
 
+  void loading() {
+    Fluttertoast.showToast(
+        msg: "Loading...",
+        gravity: ToastGravity.TOP,
+        backgroundColor: Colors.secondary,
+        textColor: Colors.primary,
+        fontAsset: "assets/fonts/Poppins-Regular.ttf",
+        fontSize: 16.0);
+  }
+
   void err({String message = "Gagal!"}) {
     Fluttertoast.showToast(
         msg: message,

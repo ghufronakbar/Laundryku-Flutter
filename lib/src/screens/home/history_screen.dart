@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_text.dart';
+import 'package:laundryku/src/services/reservation_services.dart';
 import 'package:laundryku/src/utils/colors.dart' as custom_colors;
 import 'package:laundryku/src/utils/helpers.dart';
-import 'package:laundryku/src/utils/toast.dart';
 import 'package:laundryku/src/screens/detail_history_screen.dart';
+import 'package:laundryku/src/models/reservation.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -15,11 +17,27 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen>
     with TickerProviderStateMixin {
   late final TabController _tabController;
+  late Future<ReservationData> _reservationDataFuture;
+  late List<Reservation> _unpaid = [];
+  late List<Reservation> _cancelled = [];
+  late List<Reservation> _onGoing = [];
+  late List<Reservation> _completed = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _reservationDataFuture = ReservationServices().getHistories();
+    _reservationDataFuture.then((value) {
+      setState(() {
+        _unpaid = value.unpaid;
+        _cancelled = value.cancelled;
+        _onGoing = value.onGoing;
+        _completed = value.completed;
+        _loading = false;
+      });
+    });
   }
 
   @override
@@ -32,14 +50,15 @@ class _HistoryScreenState extends State<HistoryScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const CustomText(text: "Riwayat", style: CustomTextStyle.title),
+        title: const Center(
+          child: CustomText(text: "Riwayat", style: CustomTextStyle.subheading),
+        ),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          labelStyle: CustomTextStyle.tab.style,          
+          labelStyle: CustomTextStyle.tab.style,
           indicatorColor: custom_colors.Colors.primary,
           unselectedLabelStyle: CustomTextStyle.content.style,
-
           tabs: const <Widget>[
             Tab(
               text: "Belum Dibayar",
@@ -58,68 +77,93 @@ class _HistoryScreenState extends State<HistoryScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: const <Widget>[
-          HistoryList(),
-          HistoryList(),
-          HistoryList(),
-          HistoryList(),
+        children: <Widget>[
+          HistoryList(
+            reservations: _unpaid,
+            loading: _loading,
+          ),
+          HistoryList(
+            reservations: _cancelled,
+            loading: _loading,
+          ),
+          HistoryList(
+            reservations: _onGoing,
+            loading: _loading,
+          ),
+          HistoryList(
+            reservations: _completed,
+            loading: _loading,
+          ),
         ],
       ),
     );
   }
 }
 
-class HistoryList extends StatefulWidget {
-  const HistoryList({super.key});
+class HistoryList extends StatelessWidget {
+  final List<Reservation> reservations;
+  final bool loading;
 
-  @override
-  State<HistoryList> createState() => _HistoryListState();
-}
+  const HistoryList(
+      {super.key, required this.reservations, required this.loading});
 
-class _HistoryListState extends State<HistoryList> {
   @override
   Widget build(BuildContext context) {
-    return const SingleChildScrollView(
+    if (loading) {
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        itemCount: 10,
+        itemBuilder: (context, index) {
+          return const Skeletonizer(
+            enabled: true,
+            child: CardHistory(
+              id: "",
+              status: "            ",
+              title: "Reservasi Mesin Cuci Pengering",
+              date: "2020-01-01T00:00:00.000Z",
+            ),
+          );
+        },
+      );
+    } else if (reservations.isEmpty) {
+      return const Center(
+        child: CustomText(
+          text: "Tidak ada data ditemukan",
+          style: CustomTextStyle.content,
+        ),
+      );
+    } else {
+      return SingleChildScrollView(
         child: Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.0),
-      child: Column(
-        children: <Widget>[
-          CardHistory(
-            status: "CANCELLED",
+          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: Column(
+            children: reservations
+                .map((reservation) => CardHistory(
+                      id: reservation.id,
+                      status: reservation.status,
+                      title: reservation.title,
+                      date: reservation.reservationDate.toString(),
+                    ))
+                .toList(),
           ),
-          CardHistory(
-            status: "PAID",
-          ),
-          CardHistory(
-            status: "PAID",
-          ),
-          CardHistory(
-            status: "CANCELLED",
-          ),
-          CardHistory(
-            status: "PENDING",
-          ),
-          CardHistory(
-            status: "CANCELLED",
-          ),
-          CardHistory(
-            status: "PAID",
-          ),
-          CardHistory(
-            status: "CANCELLED",
-          ),
-          CardHistory(
-            status: "PENDING",
-          ),
-        ],
-      ),
-    ));
+        ),
+      );
+    }
   }
 }
 
 class CardHistory extends StatelessWidget {
+  final String id;
+  final String title;
   final String status;
-  const CardHistory({super.key, required this.status});
+  final String date;
+
+  const CardHistory(
+      {super.key,
+      required this.id,
+      required this.title,
+      required this.status,
+      required this.date});
 
   String statusText() {
     switch (status) {
@@ -132,7 +176,7 @@ class CardHistory extends StatelessWidget {
       case "PAID":
         return "Dibayar";
       default:
-        return "";
+        return status;
     }
   }
 
@@ -147,18 +191,17 @@ class CardHistory extends StatelessWidget {
       case "PAID":
         return custom_colors.Colors.paid;
       default:
-        return custom_colors.Colors.expired;
+        return const Color(0xFFE5E5E5);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     void handleTap() {
-      Toast().success(message: status);
       Navigator.of(context).push(
         MaterialPageRoute(
-            builder: (context) => const DetailHistoryScreen(
-                  reservationName: "Reservasi Mesin Pengering 1",
+            builder: (context) => DetailHistoryScreen(
+                  id: id,
                 )),
       );
     }
@@ -182,12 +225,12 @@ class CardHistory extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const CustomText(
-                        text: "Reservasi Mesin Pengering 1",
+                      CustomText(
+                        text: title,
                         style: CustomTextStyle.subheading2,
                       ),
                       CustomText(
-                        text: Helpers.getNamedDate(DateTime.now()),
+                        text: Helpers.getNamedDate(date),
                         style: CustomTextStyle.content,
                       ),
                       const SizedBox(

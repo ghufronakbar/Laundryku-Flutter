@@ -4,8 +4,6 @@ import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/screens/login_screen.dart';
 import 'package:laundryku/src/screens/home/main_screen.dart';
 import 'package:laundryku/src/services/auth_services.dart';
-import 'package:laundryku/src/utils/regex.dart';
-import 'package:laundryku/src/utils/toast.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -172,6 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         text: "Register",
                         buttonType: ButtonType.fill,
                         onPressed: handleRegister,
+                        loading: _loading,
                       ),
                     ),
                     const SizedBox(height: 20),

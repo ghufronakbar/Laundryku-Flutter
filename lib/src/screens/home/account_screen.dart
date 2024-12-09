@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:laundryku/src/models/user.dart';
 import 'package:laundryku/src/screens/login_screen.dart';
 import 'package:laundryku/src/services/auth_services.dart';
+import 'package:laundryku/src/services/account_services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -13,50 +17,62 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
+  late Future<User> _userProfileFuture; 
+  late TextEditingController nameController;
+  late TextEditingController phoneController;
+  late TextEditingController emailController;
+  bool _loading = false;
+  String? _imageUrl;
+
+  void setLoading(bool loading) {
+    setState(() {
+      _loading = loading;
+    });
+  }
+
+  void setImageUrl(String? imageUrl) {
+    setState(() {
+      _imageUrl = imageUrl;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController();
+    phoneController = TextEditingController();
+    emailController = TextEditingController();
+
+    _userProfileFuture = AccountServices().getProfle();
+    _userProfileFuture.then((user) {
+      setState(() {
+        nameController.text = user.name;
+        phoneController.text = user.phone;
+        emailController.text = user.email;
+        _imageUrl = user.imageUrl;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> handleEditProfile() async {
+    String name = nameController.text;
+    String phone = phoneController.text;
+    String email = emailController.text;
+
+    AccountServices().editProfile(name, phone, email, _loading, setLoading);
+  }
+
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    TextEditingController nameController = TextEditingController();
-    TextEditingController phoneController = TextEditingController();
-    TextEditingController emailController = TextEditingController();
-
-    void handleSave() {
-      // Implement update profile logic here
-    }
-
-    void goToLogin() {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    }
-
-    void showLogoutConfirmation() {
-      showDialog(
-        context: context,
-        barrierDismissible: false, // Prevent closing dialog by tapping outside
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Konfirmasi Logout'),
-            content: const Text('Apakah Anda yakin ingin keluar?'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Batal'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  AuthServices().logout(goToLogin);
-                },
-                child: const Text('Ya'),
-              ),
-            ],
-          );
-        },
-      );
-    }
+    // double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
@@ -64,115 +80,219 @@ class _AccountScreenState extends State<AccountScreen> {
           child: Padding(
             padding: EdgeInsets.all(16.0),
             child: CustomText(
-                text: "Pengaturan Profil", style: CustomTextStyle.title),
+              text: "Pengaturan Profil",
+              style: CustomTextStyle.subheading,
+            ),
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const ClipOval(
-                child: ProfileImage(imageUrl: null),
-              ),
-              const SizedBox(height: 40),
-              SizedBox(
-                height: 50,
-                child: TextFormField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nama',
-                    hintText: 'Masukkan nama',
-                    labelStyle: CustomTextStyle.content.style,
-                    hintStyle: CustomTextStyle.subtitle.style,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+      body: FutureBuilder<User>(
+        future: _userProfileFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else {
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    ClipOval(
+                      child: ProfileImage(
+                          imageUrl: _imageUrl,
+                          setImageUrl:
+                              setImageUrl), // Tetap gunakan user.imageUrl
                     ),
-                    prefixIcon: const Icon(Icons.person),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 50,
-                child: TextFormField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Nomor Telepon',
-                    hintText: 'Masukkan nomor telepon',
-                    labelStyle: CustomTextStyle.content.style,
-                    hintStyle: CustomTextStyle.subtitle.style,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    const SizedBox(height: 40),
+                    buildTextField(
+                      controller: nameController,
+                      label: 'Nama',
+                      hint: 'Masukkan nama',
+                      icon: Icons.person,
                     ),
-                    prefixIcon: const Icon(Icons.phone),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                height: 50,
-                child: TextFormField(
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Masukkan alamat email',
-                    labelStyle: CustomTextStyle.content.style,
-                    hintStyle: CustomTextStyle.subtitle.style,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    const SizedBox(height: 20),
+                    buildTextField(
+                      controller: phoneController,
+                      label: 'Nomor Telepon',
+                      hint: 'Masukkan nomor telepon',
+                      icon: Icons.phone,
+                      keyboardType: TextInputType.phone,
                     ),
-                    prefixIcon: const Icon(Icons.email),
-                  ),
+                    const SizedBox(height: 20),
+                    buildTextField(
+                      controller: emailController,
+                      label: 'Email',
+                      hint: 'Masukkan alamat email',
+                      icon: Icons.email,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: CustomButton(
+                        text: "Simpan Profil",
+                        buttonType: ButtonType.fill,
+                        onPressed: handleEditProfile,
+                        loading: _loading,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: CustomButton(
+                        text: "Logout",
+                        buttonType: ButtonType.outline,
+                        onPressed: showLogoutConfirmation,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: screenWidth,
-                child: CustomButton(
-                  text: "Simpan Profil",
-                  buttonType: ButtonType.fill,
-                  onPressed: handleSave,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: screenWidth,
-                child: CustomButton(
-                  text: "Logout",
-                  buttonType: ButtonType.outline,
-                  onPressed: showLogoutConfirmation, // Show logout dialog
-                ),
-              ),
-            ],
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return SizedBox(
+      height: 50,
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          labelStyle: CustomTextStyle.content.style,
+          hintStyle: CustomTextStyle.subtitle.style,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
+          prefixIcon: Icon(icon),
         ),
       ),
+    );
+  }
+
+  void showLogoutConfirmation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Konfirmasi Logout'),
+          content: const Text('Apakah Anda yakin ingin keluar?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                AuthServices().logout(() {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                  );
+                });
+              },
+              child: const Text('Ya'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class ProfileImage extends StatelessWidget {
   final String? imageUrl;
+  final Function(String? imageUrl) setImageUrl;
 
-  const ProfileImage({super.key, this.imageUrl});
+  const ProfileImage({super.key, this.imageUrl, required this.setImageUrl});
 
   @override
   Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      width: 120,
-      height: 120,
-      fit: BoxFit.cover,
-      imageUrl: imageUrl ?? "",
-      progressIndicatorBuilder: (context, url, downloadProgress) => Image.asset(
-        'assets/images/profile.jpg',
-      ),
-      errorWidget: (context, url, error) => Image.asset(
-        'assets/images/profile.jpg',
+    return GestureDetector(
+      onTap: () => _showImageOptionsDialog(context),
+      child: ClipOval(
+        child: CachedNetworkImage(
+          width: 120,
+          height: 120,
+          fit: BoxFit.cover,
+          imageUrl: imageUrl ?? '',
+          progressIndicatorBuilder: (context, url, downloadProgress) =>
+              Image.asset('assets/images/profile.jpg'),
+          errorWidget: (context, url, error) =>
+              Image.asset('assets/images/profile.jpg'),
+        ),
       ),
     );
+  }
+
+  // Fungsi untuk menampilkan pop-up pilihan
+  void _showImageOptionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pilih Opsi Gambar'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (imageUrl != null)
+                ListTile(
+                  title: const Text("Hapus Gambar"),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    AccountServices().deletePicture(setImageUrl);
+                  },
+                ),
+              ListTile(
+                title: const Text("Kamera"),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(ImageSource.camera, context, setImageUrl);
+                },
+              ),
+              ListTile(
+                title: const Text("Galeri"),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(ImageSource.gallery, context, setImageUrl);
+                },
+              ),
+              ListTile(
+                title: const Text("Batal"),
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Fungsi untuk memilih gambar dari galeri atau kamera
+  Future<void> _pickImage(ImageSource source, BuildContext context,
+      Function(String imageUrl) setImageUrl) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      AccountServices().editPicture(imageFile, setImageUrl);
+    }
   }
 }

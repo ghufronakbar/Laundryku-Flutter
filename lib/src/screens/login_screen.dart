@@ -4,7 +4,6 @@ import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/screens/home/main_screen.dart';
 import 'package:laundryku/src/screens/register_screen.dart';
 import 'package:laundryku/src/services/auth_services.dart';
-import 'package:laundryku/src/utils/toast.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -113,6 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         text: "Login",
                         buttonType: ButtonType.fill,
                         onPressed: handleLogin,
+                        loading: _loading,
                       ),
                     ),
                     const SizedBox(height: 20),
