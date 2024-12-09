@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:laundryku/src/models/api_response.dart';
+import 'package:laundryku/src/models/detail_reservation.dart';
 import 'package:laundryku/src/models/reservation.dart';
 import 'package:laundryku/src/utils/dio_client.dart';
 
@@ -13,6 +14,17 @@ class ReservationServices {
     ApiResponse<ReservationData> parsedResponse = ApiResponse.fromJson(
       response.data!,
       (data) => ReservationData.fromJson(data),
+    );
+    return parsedResponse.data;
+  }
+
+  Future<DetailReservation> getDetailHistory(String id) async {
+    Response<Map<String, dynamic>> response =
+        await dioClient.dio.get<Map<String, dynamic>>("/reservations/$id");
+
+    ApiResponse<DetailReservation> parsedResponse = ApiResponse.fromJson(
+      response.data!,
+      (data) => DetailReservation.fromJson(data),
     );
     return parsedResponse.data;
   }
