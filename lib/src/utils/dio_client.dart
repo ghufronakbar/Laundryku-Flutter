@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:laundryku/src/utils/constants.dart';
-import 'package:laundryku/src/utils/toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<String?> getToken() async {

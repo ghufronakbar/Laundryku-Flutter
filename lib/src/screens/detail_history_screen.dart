@@ -1,6 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
+import 'package:laundryku/src/models/detail_reservation.dart';
+import 'package:laundryku/src/services/reservation_services.dart';
 import 'package:laundryku/src/utils/colors.dart' as custom_colors;
 import 'package:laundryku/src/utils/helpers.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -18,7 +21,29 @@ class DetailHistoryScreen extends StatefulWidget {
 }
 
 class DetailHistoryScreenState extends State<DetailHistoryScreen> {
-  String statusText(status) {
+  late Future<DetailReservation?> _detailReservationFuture;
+  DetailReservation? _data;
+  bool _loading = false;
+
+  void setLoading(bool loading) => setState(() => _loading = loading);
+
+  Future<void> fetchData() async {
+    _detailReservationFuture =
+        ReservationServices().getDetailHistory(widget.id);
+    _detailReservationFuture.then((value) {
+      setState(() {
+        _data = value;
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  String statusText(String? status) {
     switch (status) {
       case "PENDING":
         return "Belum Dibayar";
@@ -33,7 +58,7 @@ class DetailHistoryScreenState extends State<DetailHistoryScreen> {
     }
   }
 
-  Color statusColor(status) {
+  Color statusColor(String? status) {
     switch (status) {
       case "PENDING":
         return custom_colors.Colors.pending;
@@ -44,154 +69,182 @@ class DetailHistoryScreenState extends State<DetailHistoryScreen> {
       case "PAID":
         return custom_colors.Colors.paid;
       default:
-        return custom_colors.Colors.expired;
+        return const Color(0xFFE5E5E5);
     }
   }
 
-  void handlePayment() {}
+  Future<void> handlePayment() async {
+    // await ReservationServices().payReservation(widget.id);
+  }
+
+  Future<void> cancelPayment() async {
+    await ReservationServices()
+        .cancelReservation(widget.id, _loading, setLoading, fetchData);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.id),
-        titleTextStyle: const TextStyle(
-          color: Colors.black,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          fontFamily: "Poppins",
+    bool isShowButton = _data?.customStatus == "UNPAID";
+    if (_data == null) {
+      return Container(
+        color: Colors.white,
+        child: const Center(
+          child: CupertinoActivityIndicator(
+            color: custom_colors.Colors.primary,
+            radius: 16.0,
+          ),
         ),
-      ),
-      body: Stack(
-        children: [
-          // Konten utama
-          SingleChildScrollView(
-            child: Padding(
-              padding:
-                  const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    const CustomText(
-                        text: "Detail Reservasi",
-                        style: CustomTextStyle.heading),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                QrImageView(
-                                  data: '#2c21r-125vk-1212-3531',
-                                  version: QrVersions.auto,
-                                  size: 200.0,
-                                ),
-                                const CustomText(
-                                    text: "#2c21r-125vk-1212-3531",
-                                    style: CustomTextStyle.light),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          const CustomText(
-                              text: "Reservasi Mesin Pengering 1",
-                              style: CustomTextStyle.subheading2),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: statusColor("PENDING"),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              statusText("PENDING"),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                                fontFamily: "Poppins",
+      );
+    } else {
+      return Scaffold(
+        appBar: AppBar(
+          title: const CustomText(
+              text: "Detail Reservasi", style: CustomTextStyle.subheading),
+        ),
+        body: Stack(
+          children: [
+            // Konten utama
+            SingleChildScrollView(
+              child: Padding(
+                padding:
+                    const EdgeInsets.only(left: 16.0, right: 16.0, top: 16.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  QrImageView(
+                                    data: widget.id,
+                                    version: QrVersions.auto,
+                                    size: 200.0,
+                                  ),
+                                  CustomText(
+                                      text: widget.id,
+                                      style: CustomTextStyle.light),
+                                ],
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          const CustomText(
-                              text: "Tanggal Reservasi:",
-                              style: CustomTextStyle.content),
-                          CustomText(
-                              text: "Mulai :" +
-                                  Helpers.getNamedDate(DateTime.now()),
-                              style: CustomTextStyle.content),
-                          CustomText(
-                              text: "Selesai :" +
-                                  Helpers.getNamedDate(DateTime.now()),
-                              style: CustomTextStyle.content),
-                          const SizedBox(height: 8),
-                          const CustomText(
-                              text: "Tanggal Checkout:",
-                              style: CustomTextStyle.content),
-                          CustomText(
-                              text: Helpers.getNamedDate(DateTime.now()),
-                              style: CustomTextStyle.content),
-                          const SizedBox(height: 8),
-                        ],
+                            const SizedBox(height: 8),
+                            CustomText(
+                                text: _data?.title ?? "",
+                                style: CustomTextStyle.subheading2),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: statusColor(_data?.status),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                statusText(_data?.status),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  fontFamily: "Poppins",
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const CustomText(
+                                text: "Tanggal Reservasi:",
+                                style: CustomTextStyle.content),
+                            CustomText(
+                                text:
+                                    "Mulai : ${Helpers.getNamedDate(_data?.reservationDate)}",
+                                style: CustomTextStyle.content),
+                            CustomText(
+                                text:
+                                    "Selesai : ${Helpers.getNamedDate(_data?.reservationEnd)}",
+                                style: CustomTextStyle.content),
+                            const SizedBox(height: 8),
+                            const CustomText(
+                                text: "Tanggal Checkout:",
+                                style: CustomTextStyle.content),
+                            CustomText(
+                                text: Helpers.getNamedDate(_data?.paidAt),
+                                style: CustomTextStyle.content),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const CustomText(
-                              text: "Detail Pembayaran",
-                              style: CustomTextStyle.subheading2),
-                          const SizedBox(height: 8),
-                          CustomText(
-                              text: Helpers.formatRupiah(20000),
-                              style: CustomTextStyle.tab),
-                          const SizedBox(height: 8),
-                          const CustomText(
-                              text: "Metode Pembayaran: -",
-                              style: CustomTextStyle.content),
-                          const SizedBox(height: 4),
-                          CustomText(
-                              text: "Dibayar pada: " +
-                                  Helpers.getNamedDate(DateTime.now()),
-                              style: CustomTextStyle.content),
-                          const SizedBox(height: 8),
-                        ],
+                      const SizedBox(
+                        height: 16,
                       ),
-                    ),
-                  ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const CustomText(
+                                text: "Detail Pembayaran",
+                                style: CustomTextStyle.subheading2),
+                            const SizedBox(height: 8),
+                            CustomText(
+                                text: Helpers.formatRupiah(20000),
+                                style: CustomTextStyle.tab),
+                            const SizedBox(height: 8),
+                            CustomText(
+                                text:
+                                    "Metode Pembayaran: ${_data?.paymentMethod ?? "-"}",
+                                style: CustomTextStyle.content),
+                            const SizedBox(height: 4),
+                            CustomText(
+                                text:
+                                    "Dibayar pada: ${Helpers.getNamedDate(_data?.paidAt)}",
+                                style: CustomTextStyle.content),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: CustomButton(
-                    text: "Bayar Tagihan",
-                    buttonType: ButtonType.fill,
-                    onPressed: handlePayment,
-                  ),
-                )),
-          ),
-        ],
-      ),
-    );
+            isShowButton
+                ? Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: CustomButton(
+                                text: "Batalkan Reservasi",
+                                buttonType: ButtonType.outline,
+                                onPressed: cancelPayment,
+                                loading: _loading,
+                              ),
+                            ),
+                            SizedBox(
+                              width: double.infinity,
+                              child: CustomButton(
+                                text: "Bayar Tagihan",
+                                buttonType: ButtonType.fill,
+                                onPressed: handlePayment,
+                              ),
+                            ),
+                          ],
+                        )),
+                  )
+                : const SizedBox(),
+          ],
+        ),
+      );
+    }
   }
 }
