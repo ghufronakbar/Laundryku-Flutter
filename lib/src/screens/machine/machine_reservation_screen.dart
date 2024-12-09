@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
+import 'package:laundryku/src/models/detail_machine.dart';
+import 'package:laundryku/src/screens/detail_history_screen.dart';
+import 'package:laundryku/src/services/machine_services.dart';
+import 'package:laundryku/src/services/reservation_services.dart';
 import 'package:laundryku/src/utils/colors.dart' as custom_colors;
 import 'package:skeletonizer/skeletonizer.dart';
 
 class MachineReservationScreen extends StatefulWidget {
   final String machineName;
+  final int totalMachine;
 
   const MachineReservationScreen({
     super.key,
     required this.machineName,
+    required this.totalMachine,
   });
 
   @override
@@ -21,42 +27,128 @@ class MachineReservationScreen extends StatefulWidget {
 class MachineReservationScreenState extends State<MachineReservationScreen> {
   DateTime? selectedDate;
   String? selectedMachineNumber = '1';
+  String? selectedTime;
   bool _loading = true;
+  bool _pending = false;
 
-  // Dummy data for ButtonTime
-  List<Map<String, dynamic>> dummyTimes = List.generate(
-    24,
-    (index) => {
-      'text': DateFormat('HH:mm')
-          .format(DateTime(2023, 1, 1, index, 0)), // Time from 00:00 to 23:00
-      'isAvailable': index % 2 == 0, // Mark even hours as available
-    },
-  );
-
-  void onReservationPressed() {
+  void setPending(bool pending) {
     setState(() {
-      _loading = !_loading;
+      _pending = pending;
+    });
+  }
+
+  late Future<DetailMachineData> _machinesFuture;
+  List<DetailMachine> _morning = [];
+  List<DetailMachine> _afternoon = [];
+  List<DetailMachine> _night = [];
+
+  void afterReservation(String id) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => DetailHistoryScreen(id: id)),
+    );
+  }
+
+  void setLoading(bool loading) {
+    setState(() {
+      _loading = loading;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final String machineType =
-        widget.machineName == "Reservasi Mesin Pencuci" ? "MACHINE" : "DRYING";
+        widget.machineName == "Reservasi Mesin Pencuci" ? "WASHING" : "DRYING";
 
-    List<Widget> buttonsTimeWithLoading = List.generate(
+    Future<void> onReservationPressed() async {
+      if (selectedDate != null &&
+          selectedMachineNumber != null &&
+          selectedTime != null) {
+        var res = await ReservationServices().checkout(
+            machineType,
+            selectedMachineNumber.toString(),
+            selectedDate.toString(),
+            selectedTime.toString(),
+            _pending,
+            setPending);
+        print("res " + res.toString());
+        if (res != null) {
+          afterReservation(res);
+        }
+      }
+    }
+
+    Future<void> fetchData() async {
+      if (selectedDate != null && selectedMachineNumber != null) {
+        setLoading(true);
+        _machinesFuture = MachineServices().getStatusPerMachineDate(
+            machineType, selectedDate.toString(), selectedMachineNumber!);
+        _machinesFuture.then((value) {
+          setState(() {
+            _morning = value.morning;
+            _afternoon = value.afternoon;
+            _night = value.night;
+          });
+          setLoading(false);
+        });
+      }
+    }
+
+    List<Widget> onLoading = List.generate(
       24,
       (index) {
         return Skeletonizer(
           enabled: _loading,
           child: ButtonTime(
-            text: dummyTimes[index]['text'],
-            isSelected: false, // Set this according to your logic later
+            text: "00:00",
+            isSelected: true, // Set this according to your logic later
             isAvailable: true,
+            onPressed: () {},
           ),
         );
       },
     );
+
+    void onPressedButtonTime(String time) {
+      print("hitted");
+      print(time);
+      setState(() {
+        selectedTime = time;
+      });
+    }
+
+    List<Widget> onFetchedMorning = _morning
+        .map(
+          (item) => ButtonTime(
+            text: item.time,
+            isSelected: item.time == selectedTime,
+            isAvailable: item.isAvailable,
+            onPressed: () => onPressedButtonTime(item.time),
+          ),
+        )
+        .toList();
+    List<Widget> onFetchedAfternoon = _afternoon
+        .map(
+          (item) => ButtonTime(
+            text: item.time,
+            isSelected: item.time == selectedTime,
+            isAvailable: item.isAvailable,
+            onPressed: () => onPressedButtonTime(item.time),
+          ),
+        )
+        .toList();
+    List<Widget> onFetchedNight = _night
+        .map(
+          (item) => ButtonTime(
+            text: item.time,
+            isSelected: item.time == selectedTime,
+            isAvailable: item.isAvailable,
+            onPressed: () => onPressedButtonTime(item.time),
+          ),
+        )
+        .toList();
+
+    List<String> listMachine =
+        List.generate(widget.totalMachine, (index) => (index + 1).toString());
 
     return Scaffold(
       appBar: AppBar(
@@ -87,9 +179,12 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                     onChanged: (String? newValue) {
                       setState(() {
                         selectedMachineNumber = newValue;
+                        selectedTime = null;
                       });
+
+                      fetchData();
                     },
-                    items: ['1', '2', '3', '4', '5']
+                    items: listMachine
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
@@ -99,7 +194,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   ),
                   const SizedBox(height: 20),
                   const CustomText(
-                    text: "Pilih tanggal",
+                    text: "Pilih Tanggal",
                     style: CustomTextStyle.subheading2,
                   ),
                   // DATEPICKER dan ambil VALUE dengan format YYYY-MM-DD
@@ -115,7 +210,9 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                       if (pickedDate != null && pickedDate != selectedDate) {
                         setState(() {
                           selectedDate = pickedDate;
+                          selectedTime = null;
                         });
+                        fetchData();
                       }
                     },
                     child: Container(
@@ -155,7 +252,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: buttonsTimeWithLoading,
+                      children: _loading ? onLoading : onFetchedMorning,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -166,7 +263,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: buttonsTimeWithLoading,
+                      children: _loading ? onLoading : onFetchedAfternoon,
                     ),
                   ),
                   const SizedBox(height: 5),
@@ -177,7 +274,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: buttonsTimeWithLoading,
+                      children: _loading ? onLoading : onFetchedNight,
                     ),
                   ),
                   const SizedBox(
@@ -247,7 +344,7 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                               ),
                               const SizedBox(width: 8),
                               CustomText(
-                                text: selectedDate.toString(),
+                                text: selectedTime ?? "-",
                                 style: CustomTextStyle.content,
                               ),
                             ],
@@ -270,7 +367,10 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
                   width: double.infinity,
                   child: CustomButton(
                     text: "Reservasi Sekarang",
-                    buttonType: ButtonType.fill,
+                    loading: _pending,
+                    buttonType: selectedDate == null || selectedTime == null
+                        ? ButtonType.disabled
+                        : ButtonType.fill,
                     onPressed: onReservationPressed,
                   ),
                 )),
@@ -283,32 +383,30 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
 
 class ButtonTime extends StatelessWidget {
   final String text;
-  final VoidCallback? onPressed;
+  final Function onPressed;
   final bool isSelected;
   final bool isAvailable;
 
   const ButtonTime({
     super.key,
     required this.text,
-    this.onPressed,
+    required this.onPressed,
     this.isSelected = false,
     this.isAvailable = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: isAvailable ? onPressed : null,
-      child: Padding(
-        padding: const EdgeInsets.only(right: 8.0),
-        child: CustomButton(
-          text: text,
-          buttonType: !isAvailable
-              ? ButtonType.disabled
-              : isSelected
-                  ? ButtonType.fill
-                  : ButtonType.outline,
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: CustomButton(
+        text: text,
+        onPressed: isAvailable ? () => onPressed() : null,
+        buttonType: !isAvailable
+            ? ButtonType.disabled
+            : isSelected
+                ? ButtonType.fill
+                : ButtonType.outline,
       ),
     );
   }

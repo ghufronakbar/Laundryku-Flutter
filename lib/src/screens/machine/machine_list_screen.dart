@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:laundryku/src/components/custom_text.dart';
+import 'package:laundryku/src/models/machine.dart';
 import 'package:laundryku/src/screens/machine/machine_reservation_screen.dart';
+import 'package:laundryku/src/services/machine_services.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class MachineListScreen extends StatefulWidget {
   final String machineName;
@@ -17,15 +20,75 @@ class MachineListScreen extends StatefulWidget {
 }
 
 class MachineListScreenState extends State<MachineListScreen> {
-  // Fungsi untuk navigasi ke halaman reservasi
+  bool _loading = true;
+
+  late Future<MachineData> _machinesFuture;
+
+  List<Machine> _data = [];
+
+  bool isWashingMachine = false;
+
+  @override
+  void initState() {
+    super.initState();
+    isWashingMachine = widget.machineName == "Mesin Pencuci";
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    _machinesFuture = MachineServices().getStatusMachine();
+    _machinesFuture.then((value) {
+      setState(() {
+        _data = isWashingMachine ? value.washingMachines : value.dryingMachines;
+        _loading = false;
+      });
+    });
+  }
+
   void onGoReservation() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => MachineReservationScreen(
           machineName: 'Reservasi ${widget.machineName}',
+          totalMachine: _data.length,
         ),
       ),
     );
+  }
+
+  List<Widget> onLoading() {
+    return List.generate(11, (index) {
+      return StaggeredGridTile.count(
+        crossAxisCellCount: 1,
+        mainAxisCellCount: 1.15,
+        child: Skeletonizer(
+          enabled: true,
+          child: CardMachine(
+            isAvailable: true,
+            name: "Machine ${index + 1}",
+            type: widget.machineName == "Mesin Pencuci"
+                ? MachineType.washing
+                : MachineType.drying,
+          ),
+        ),
+      );
+    });
+  }
+
+  List<Widget> onFetched() {
+    return _data
+        .map((item) => StaggeredGridTile.count(
+              crossAxisCellCount: 1,
+              mainAxisCellCount: 1.15,
+              child: CardMachine(
+                isAvailable: item.isAvailable,
+                name: item.name,
+                type: widget.machineName == "Mesin Pencuci"
+                    ? MachineType.washing
+                    : MachineType.drying,
+              ),
+            ))
+        .toList();
   }
 
   @override
@@ -53,19 +116,7 @@ class MachineListScreenState extends State<MachineListScreen> {
                     crossAxisCount: 2,
                     mainAxisSpacing: 4,
                     crossAxisSpacing: 4,
-                    children: List.generate(11, (index) {
-                      return StaggeredGridTile.count(
-                        crossAxisCellCount: 1,
-                        mainAxisCellCount: 1.15,
-                        child: CardMachine(
-                          isAvailable: true,
-                          name: "Machine ${index + 1}",
-                          type: widget.machineName == "Mesin Pencuci"
-                              ? MachineType.washing
-                              : MachineType.drying,
-                        ),
-                      );
-                    }),
+                    children: _loading ? onLoading() : onFetched(),
                   ),
                   const SizedBox(height: 100),
                 ],

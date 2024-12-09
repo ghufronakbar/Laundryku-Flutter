@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/models/detail_reservation.dart';
+import 'package:laundryku/src/screens/payment_screen.dart';
 import 'package:laundryku/src/services/reservation_services.dart';
 import 'package:laundryku/src/utils/colors.dart' as custom_colors;
 import 'package:laundryku/src/utils/helpers.dart';
@@ -73,8 +74,16 @@ class DetailHistoryScreenState extends State<DetailHistoryScreen> {
     }
   }
 
-  Future<void> handlePayment() async {
-    // await ReservationServices().payReservation(widget.id);
+  void handlePayment() {
+    if (_data?.directUrl != null && _data?.snapToken != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (context) => PaymentScreen(
+                  directUrl: _data!.directUrl,
+                  snapToken: _data!.snapToken,
+                )),
+      );
+    }
   }
 
   Future<void> cancelPayment() async {
