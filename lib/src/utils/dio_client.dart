@@ -10,7 +10,7 @@ Future<String?> getToken() async {
 class DioClient {
   Dio dio;
 
-  DioClient() : dio = Dio(BaseOptions(baseUrl: Constants.baseUrl)) {
+  DioClient() : dio = Dio(BaseOptions(baseUrl: "${Constants.baseUrl}/api")) {
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         String? token = await getToken();
@@ -22,7 +22,7 @@ class DioClient {
       onResponse: (response, handler) async {
         return handler.next(response);
       },
-      onError: (DioException e, handler) async {        
+      onError: (DioException e, handler) async {
         return handler.next(e);
       },
     ));

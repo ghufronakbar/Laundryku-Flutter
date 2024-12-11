@@ -3,6 +3,9 @@ import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/models/user.dart';
 import 'package:laundryku/src/screens/machine/machine_list_screen.dart';
 import 'package:laundryku/src/services/account_services.dart';
+import 'package:laundryku/src/utils/constants.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,6 +18,11 @@ class _HomeScreenState extends State<HomeScreen> {
   String _name = "Loading...";
   late Future<User> _userProfileFuture;
 
+  // Lokasi pusat untuk peta
+  final String _locationUrl = "${Constants.baseUrl}/map";
+
+  late WebViewController _webViewController;
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +32,37 @@ class _HomeScreenState extends State<HomeScreen> {
         _name = user.name;
       });
     });
+
+    // Inisialisasi WebView
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onProgress: (int progress) {
+            // Update loading bar.
+          },
+          onPageStarted: (String url) {},
+          onPageFinished: (String url) {},
+          onHttpError: (HttpResponseError error) {},
+          onWebResourceError: (WebResourceError error) {},
+          onNavigationRequest: (NavigationRequest request) {
+            if (request.url.startsWith(_locationUrl)) {
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(_locationUrl));
+  }
+
+  // Fungsi untuk membuka URL di browser
+  void _openUrl(String url) async {
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url));
+    } else {
+      throw 'Tidak dapat membuka $url';
+    }
   }
 
   String getGreeting() {
@@ -86,19 +125,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                       elevation: 8,
                       child: SizedBox(
-                          width: screenWidth * 0.40,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(children: [
-                              Image.asset(
-                                "assets/images/washing.png",
-                                width: screenWidth * 0.40,
-                              ),
-                              const CustomText(
-                                  text: "Pencuci",
-                                  style: CustomTextStyle.subheading),
-                            ]),
-                          )),
+                        width: screenWidth * 0.40,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(children: [
+                            Image.asset(
+                              "assets/images/washing.png",
+                              width: screenWidth * 0.40,
+                            ),
+                            const CustomText(
+                                text: "Pencuci",
+                                style: CustomTextStyle.subheading),
+                          ]),
+                        ),
+                      ),
                     ),
                   ),
                   GestureDetector(
@@ -107,23 +147,46 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white,
                       elevation: 8,
                       child: SizedBox(
-                          width: screenWidth * 0.40,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(children: [
-                              Image.asset(
-                                "assets/images/drying.png",
-                                width: screenWidth * 0.40,
-                              ),
-                              const CustomText(
-                                  text: "Pengering",
-                                  style: CustomTextStyle.subheading),
-                            ]),
-                          )),
+                        width: screenWidth * 0.40,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(children: [
+                            Image.asset(
+                              "assets/images/drying.png",
+                              width: screenWidth * 0.40,
+                            ),
+                            const CustomText(
+                                text: "Pengering",
+                                style: CustomTextStyle.subheading),
+                          ]),
+                        ),
+                      ),
                     ),
                   ),
                 ],
-              )
+              ),
+              const SizedBox(height: 20),
+              const CustomText(
+                  text: "Lihat Lokasi", style: CustomTextStyle.heading),
+              SizedBox(
+                height: 250, // Atur ukuran peta
+                width: double.infinity,
+                child: Stack(
+                  children: [
+                    WebViewWidget(
+                      controller: _webViewController,
+                    ),
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onTap: () => _openUrl(Constants.mapUrl), // Menangani klik untuk membuka URL
+                        child: Container(
+                          color: Colors.transparent, // Transparan agar WebView tetap terlihat
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
