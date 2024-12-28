@@ -6,6 +6,7 @@ import 'package:laundryku/src/services/account_services.dart';
 import 'package:laundryku/src/utils/constants.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:laundryku/src/utils/toast.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -61,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     } else {
+      Toast().err(message: "Tidak dapat membuka peta");
       throw 'Tidak dapat membuka $url';
     }
   }
@@ -180,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: GestureDetector(
                         onTap: () => _openUrl(Constants.mapUrl), // Menangani klik untuk membuka URL
                         child: Container(
-                          color: Colors.transparent, // Transparan agar WebView tetap terlihat
+                          color: Colors.transparent,
                         ),
                       ),
                     ),

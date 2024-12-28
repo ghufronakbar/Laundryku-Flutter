@@ -23,8 +23,8 @@ class Helpers {
     final day = date.day;
     final month = _getMonthName(date.month);
     final year = date.year;
-    final hour = date.hour;
-    final minute = date.minute;
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
 
     return '$weekday, $day $month $year $hour:$minute';
   }

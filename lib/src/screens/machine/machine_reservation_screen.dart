@@ -4,6 +4,7 @@ import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
 import 'package:laundryku/src/models/detail_machine.dart';
 import 'package:laundryku/src/screens/detail_history_screen.dart';
+import 'package:laundryku/src/screens/home/main_screen.dart';
 import 'package:laundryku/src/services/machine_services.dart';
 import 'package:laundryku/src/services/reservation_services.dart';
 import 'package:laundryku/src/utils/colors.dart' as custom_colors;
@@ -43,9 +44,17 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
   List<DetailMachine> _night = [];
 
   void afterReservation(String id) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => DetailHistoryScreen(id: id)),
-    );
+    Navigator.of(context)
+        .push(
+      MaterialPageRoute(
+        builder: (context) => DetailHistoryScreen(id: id),
+      ),
+    )
+        .then((_) {
+      Navigator.of(context).pop();
+    }).then((_) {
+      Navigator.of(context).pop();
+    });
   }
 
   void setLoading(bool loading) {
@@ -70,7 +79,6 @@ class MachineReservationScreenState extends State<MachineReservationScreen> {
             selectedTime.toString(),
             _pending,
             setPending);
-        print("res " + res.toString());
         if (res != null) {
           afterReservation(res);
         }

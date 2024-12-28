@@ -66,6 +66,7 @@ class AccountServices {
   Future<void> editPicture(
     File pic,
     Function(String imageUrl) setImageUrl,
+    Function afterSuccess,
   ) async {
     Toast().loading();
     // Gunakan FormData untuk mengirimkan gambar
@@ -91,14 +92,12 @@ class AccountServices {
 
       setImageUrl(parsedResponse.data.imageUrl ?? "");
 
-      // Menampilkan toast sukses
+      
       Toast().success(message: parsedResponse.message);
+      afterSuccess();
     } on DioException catch (e) {
-      // Menangani error
       Toast().err(message: e.response?.data['message'] ?? "Terjadi kesalahan");
-    } finally {
-      // Menyelesaikan loading state
-    }
+    } 
   }
 
   Future<void> deletePicture(Function(String? imageUrl) setImageUrl) async {

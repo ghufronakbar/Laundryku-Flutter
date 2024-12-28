@@ -17,27 +17,31 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen>
     with TickerProviderStateMixin {
   late final TabController _tabController;
-  late Future<ReservationData> _reservationDataFuture;
   late List<Reservation> _unpaid = [];
   late List<Reservation> _cancelled = [];
   late List<Reservation> _onGoing = [];
   late List<Reservation> _completed = [];
   bool _loading = true;
 
+  void setLoading(bool loading) => setState(() => _loading = loading);
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _reservationDataFuture = ReservationServices().getHistories();
-    _reservationDataFuture.then((value) {
-      setState(() {
-        _unpaid = value.unpaid;
-        _cancelled = value.cancelled;
-        _onGoing = value.onGoing;
-        _completed = value.completed;
-        _loading = false;
-      });
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    setLoading(true);
+    final reservationData = await ReservationServices().getHistories();
+    setState(() {
+      _unpaid = reservationData.unpaid;
+      _cancelled = reservationData.cancelled;
+      _onGoing = reservationData.onGoing;
+      _completed = reservationData.completed;
     });
+    setLoading(false);
   }
 
   @override
@@ -78,21 +82,25 @@ class _HistoryScreenState extends State<HistoryScreen>
       body: TabBarView(
         controller: _tabController,
         children: <Widget>[
-          HistoryList(
+          RefreshableHistoryList(
             reservations: _unpaid,
             loading: _loading,
+            onRefresh: fetchData,
           ),
-          HistoryList(
+          RefreshableHistoryList(
             reservations: _cancelled,
             loading: _loading,
+            onRefresh: fetchData,
           ),
-          HistoryList(
+          RefreshableHistoryList(
             reservations: _onGoing,
             loading: _loading,
+            onRefresh: fetchData,
           ),
-          HistoryList(
+          RefreshableHistoryList(
             reservations: _completed,
             loading: _loading,
+            onRefresh: fetchData,
           ),
         ],
       ),
@@ -268,6 +276,72 @@ class CardHistory extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class RefreshableHistoryList extends StatelessWidget {
+  final List<Reservation> reservations;
+  final bool loading;
+  final Future<void> Function() onRefresh;
+
+  const RefreshableHistoryList({
+    super.key,
+    required this.reservations,
+    required this.loading,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        itemCount: 10,
+        itemBuilder: (context, index) {
+          return const Skeletonizer(
+            enabled: true,
+            child: CardHistory(
+              id: "",
+              status: "            ",
+              title: "Reservasi Mesin Cuci Pengering",
+              date: "2020-01-01T00:00:00.000Z",
+            ),
+          );
+        },
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: reservations.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: const [
+                SizedBox(height: 100),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CustomText(
+                      text: "Tidak ada data ditemukan",
+                      style: CustomTextStyle.content,
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              itemCount: reservations.length,
+              itemBuilder: (context, index) {
+                return CardHistory(
+                  id: reservations[index].id,
+                  status: reservations[index].status,
+                  title: reservations[index].title,
+                  date: reservations[index].reservationDate.toString(),
+                );
+              },
+            ),
     );
   }
 }

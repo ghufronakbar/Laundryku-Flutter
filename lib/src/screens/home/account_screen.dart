@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:laundryku/src/components/custom_button.dart';
 import 'package:laundryku/src/components/custom_text.dart';
@@ -7,6 +8,7 @@ import 'package:laundryku/src/screens/login_screen.dart';
 import 'package:laundryku/src/services/auth_services.dart';
 import 'package:laundryku/src/services/account_services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:laundryku/src/utils/colors.dart' as custom_colors;
 import 'dart:io';
 
 class AccountScreen extends StatefulWidget {
@@ -17,12 +19,12 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  late Future<User> _userProfileFuture; 
   late TextEditingController nameController;
   late TextEditingController phoneController;
   late TextEditingController emailController;
   bool _loading = false;
   String? _imageUrl;
+  bool _fetching = false;
 
   void setLoading(bool loading) {
     setState(() {
@@ -43,14 +45,20 @@ class _AccountScreenState extends State<AccountScreen> {
     phoneController = TextEditingController();
     emailController = TextEditingController();
 
-    _userProfileFuture = AccountServices().getProfle();
-    _userProfileFuture.then((user) {
-      setState(() {
-        nameController.text = user.name;
-        phoneController.text = user.phone;
-        emailController.text = user.email;
-        _imageUrl = user.imageUrl;
-      });
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    setState(() {
+      _fetching = true;
+    });
+    final user = await AccountServices().getProfle();
+    setState(() {
+      nameController.text = user.name;
+      phoneController.text = user.phone;
+      emailController.text = user.email;
+      _imageUrl = user.imageUrl;
+      _fetching = false;
     });
   }
 
@@ -72,87 +80,89 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // double screenWidth = MediaQuery.of(context).size.width;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: CustomText(
-              text: "Pengaturan Profil",
-              style: CustomTextStyle.subheading,
+    if (_fetching) {
+      return Container(
+        color: Colors.white,
+        child: const Center(
+          child: CupertinoActivityIndicator(
+            color: custom_colors.Colors.primary,
+            radius: 16.0,
+          ),
+        ),
+      );
+    } else {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CustomText(
+                text: "Pengaturan Profil",
+                style: CustomTextStyle.subheading,
+              ),
             ),
           ),
         ),
-      ),
-      body: FutureBuilder<User>(
-        future: _userProfileFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else {
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    ClipOval(
-                      child: ProfileImage(
-                          imageUrl: _imageUrl,
-                          setImageUrl:
-                              setImageUrl), // Tetap gunakan user.imageUrl
-                    ),
-                    const SizedBox(height: 40),
-                    buildTextField(
-                      controller: nameController,
-                      label: 'Nama',
-                      hint: 'Masukkan nama',
-                      icon: Icons.person,
-                    ),
-                    const SizedBox(height: 20),
-                    buildTextField(
-                      controller: phoneController,
-                      label: 'Nomor Telepon',
-                      hint: 'Masukkan nomor telepon',
-                      icon: Icons.phone,
-                      keyboardType: TextInputType.phone,
-                    ),
-                    const SizedBox(height: 20),
-                    buildTextField(
-                      controller: emailController,
-                      label: 'Email',
-                      hint: 'Masukkan alamat email',
-                      icon: Icons.email,
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: CustomButton(
-                        text: "Simpan Profil",
-                        buttonType: ButtonType.fill,
-                        onPressed: handleEditProfile,
-                        loading: _loading,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: CustomButton(
-                        text: "Logout",
-                        buttonType: ButtonType.outline,
-                        onPressed: showLogoutConfirmation,
-                      ),
-                    ),
-                  ],
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ClipOval(
+                  child: ProfileImage(
+                    imageUrl: _imageUrl,
+                    setImageUrl: setImageUrl,
+                    fetchData: () => {},
+                  ),
                 ),
-              ),
-            );
-          }
-        },
-      ),
-    );
+                const SizedBox(height: 40),
+                buildTextField(
+                  controller: nameController,
+                  label: 'Nama',
+                  hint: 'Masukkan nama',
+                  icon: Icons.person,
+                ),
+                const SizedBox(height: 20),
+                buildTextField(
+                  controller: phoneController,
+                  label: 'Nomor Telepon',
+                  hint: 'Masukkan nomor telepon',
+                  icon: Icons.phone,
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 20),
+                buildTextField(
+                  controller: emailController,
+                  label: 'Email',
+                  hint: 'Masukkan alamat email',
+                  icon: Icons.email,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: CustomButton(
+                    text: "Simpan Profil",
+                    buttonType: ButtonType.fill,
+                    onPressed: handleEditProfile,
+                    loading: _loading,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: CustomButton(
+                    text: "Logout",
+                    buttonType: ButtonType.outline,
+                    onPressed: showLogoutConfirmation,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   Widget buildTextField({
@@ -218,8 +228,13 @@ class _AccountScreenState extends State<AccountScreen> {
 class ProfileImage extends StatelessWidget {
   final String? imageUrl;
   final Function(String? imageUrl) setImageUrl;
+  final Function() fetchData;
 
-  const ProfileImage({super.key, this.imageUrl, required this.setImageUrl});
+  const ProfileImage(
+      {super.key,
+      this.imageUrl,
+      required this.setImageUrl,
+      required this.fetchData});
 
   @override
   Widget build(BuildContext context) {
@@ -240,7 +255,6 @@ class ProfileImage extends StatelessWidget {
     );
   }
 
-  // Fungsi untuk menampilkan pop-up pilihan
   void _showImageOptionsDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -292,7 +306,7 @@ class ProfileImage extends StatelessWidget {
 
     if (pickedFile != null) {
       File imageFile = File(pickedFile.path);
-      AccountServices().editPicture(imageFile, setImageUrl);
+      AccountServices().editPicture(imageFile, setImageUrl, fetchData);
     }
   }
 }
